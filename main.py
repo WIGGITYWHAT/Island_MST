@@ -11,8 +11,8 @@ Date: November 24, 2015
 """
 
 import csv
-from node import Node
-from args import args
+from scripts.node import Node
+from scripts.args import args
 
 
 def main():
