@@ -17,13 +17,29 @@ from scripts.args import args
 
 def main():
     """Main script execution."""
-    # Open the csv file
-    input_file = open(args.matrix, 'rU')
+    # Read in data and build graph data structure
+    nodes = build_graph(args.matrix)
+
+    # Calculate minimum spanning tree with Djikstra's algorithm
+    distances, previous = calculate_mst(nodes, args.start_node)
+
+    # Print result
+    if args.print_out:
+        print "Start node:", args.start_node, "\n"
+        print_table(distances, previous)
+
+    # Write result to css
+    write_output(args.outfile, distances, previous)
+
+
+def build_graph(input_file):
+    """Build the graph data structure from the input csv file."""
+    # Open the csv as dict iterator
+    input_file = open(input_file, 'rU')
     reader = csv.DictReader(input_file)
 
-    nodes = {}
-
     # Create all nodes
+    nodes = {}
     for row in reader:
         name = row['NODE']
         nodes[name] = Node(name)
@@ -45,16 +61,7 @@ def main():
             if neighbor != node:
                 node.set_neighbor(neighbor, float(row[neighbor.name]))
 
-    # Calculate minimum spanning tree with Djikstra's algorithm
-    distances, previous = calculate_mst(nodes, args.start_node)
-
-    # Print result
-    if args.print_out:
-        print "Start node:", args.start_node, "\n"
-        print_table(distances, previous)
-
-    # Write result to css
-    write_output(distances, previous)
+    return nodes
 
 
 def calculate_mst(nodes, start_node):
@@ -91,9 +98,9 @@ def calculate_mst(nodes, start_node):
     return distances, previous
 
 
-def write_output(distances, previous):
+def write_output(outfile, distances, previous):
     """Write results to output csv file."""
-    with open(args.outfile, "w") as outfile:
+    with open(outfile, "w") as outfile:
         fieldnames = ['node', 'dist', 'prev']
         writer = csv.DictWriter(outfile, fieldnames=fieldnames)
 
