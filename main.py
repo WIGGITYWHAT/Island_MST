@@ -43,7 +43,7 @@ def main():
 
         for neighbor in neighbors:
             if neighbor != node:
-                node.set_neighbor(neighbor, float(row[neighbor.get_name()]))
+                node.set_neighbor(neighbor, float(row[neighbor.name]))
 
     # Calculate minimum spanning tree with Djikstra's algorithm
     distances, previous = calculate_mst(nodes, args.start_node)
@@ -78,10 +78,10 @@ def calculate_mst(nodes, start_node):
     while(current):
         # Look at all neighbors and compare distances
         for neighbor in current.get_unvisited_neighbors():
-            alt = distances[current.get_name()]+current.get_distance(neighbor)
-            if alt < distances[neighbor.get_name()]:
-                distances[neighbor.get_name()] = alt
-                previous[neighbor.get_name()] = current.get_name()
+            alt = distances[current.name]+current.get_distance(neighbor)
+            if alt < distances[neighbor.name]:
+                distances[neighbor.name] = alt
+                previous[neighbor.name] = current.name
 
         # Mark current node as visited
         current.set_visited(True)
