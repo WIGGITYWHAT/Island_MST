@@ -12,9 +12,9 @@ Date: November 24, 2015
 """
 
 import csv
-import sys
 from scripts.node import Node
 from scripts.args import args
+from scripts.printer import print_progress
 import fiona
 from shapely.geometry import shape
 
@@ -68,17 +68,6 @@ def build_shp_graph(input_file):
         print_progress(1)
         print
         return nodes
-
-
-def print_progress(p):
-    """Print a progress bar with %p finished."""
-    toolbar_len = 50
-    num_done = int(toolbar_len*p)
-    num_remain = toolbar_len - num_done
-
-    sys.stdout.flush()
-    sys.stdout.write("\r[{}{}] %{}".format("="*num_done,
-                     " "*num_remain, int(p*100)))
 
 
 def build_graph(input_file):
