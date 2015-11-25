@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """Main Djikstra's Algorithm implementation.
 
 Create nodes from input file and exports the minimum distance between the
@@ -6,13 +5,18 @@ specified starting node and every other node.
 
 For help run `python main.py --help`
 
+Requirements: fiona, shapely
+
 Written by: Taylor Denouden
 Date: November 24, 2015
 """
 
 import csv
+import sys
 from scripts.node import Node
 from scripts.args import args
+import fiona
+from shapely.geometry import shape
 
 
 def main():
@@ -30,6 +34,51 @@ def main():
 
     # Write result to css
     write_output(args.outfile, distances, previous)
+
+
+def build_shp_graph(input_file):
+    """Build the graph data structure from the input shp file."""
+    # Open the shapefiles
+    with fiona.open(input_file, 'r') as source:
+        source = list(source)
+        nodes = {}
+
+        # Create all nodes
+        print "Adding nodes"
+        for i, f in enumerate(source):
+            print_progress(i/float(len(source)))
+            f_id = f['id']
+            nodes[f_id] = Node(f_id)
+        print_progress(1)
+        print
+
+        # Set neighbors and distance
+        print "Building graph"
+        for i, f in enumerate(source):
+            print_progress(i/float(len(source)))
+            f_id = f['id']
+            f_node = nodes[f_id]
+            f_shape = shape(f['geometry'])
+
+            for j in source:
+                j_id = j['id']
+                if f_id != j_id:
+                    dist = f_shape.distance(shape(j['geometry']))
+                    f_node.set_neighbor(nodes[j_id], dist)
+        print_progress(1)
+        print
+        return nodes
+
+
+def print_progress(p):
+    """Print a progress bar with %p finished."""
+    toolbar_len = 50
+    num_done = int(toolbar_len*p)
+    num_remain = toolbar_len - num_done
+
+    sys.stdout.flush()
+    sys.stdout.write("\r[{}{}] %{}".format("="*num_done,
+                     " "*num_remain, int(p*100)))
 
 
 def build_graph(input_file):
@@ -115,10 +164,10 @@ def write_output(outfile, distances, previous):
 
 def print_table(distances, previous):
     """Print out node distances and order in a nice tabular format."""
-    print "{:^10} | {:^10} | {:^10}".format("Node", "Distance", "Previous")
+    print "{:^10} | {:^20} | {:^10}".format("Node", "Distance", "Previous")
     print "-"*36
     for (k, v) in distances.iteritems():
-        print "{:^10} | {:>10} | {:^10}".format(k, v, previous.get(k, "-"))
+        print "{:^10} | {:>20} | {:^10}".format(k, v, previous.get(k, "-"))
 
 
 if __name__ == "__main__":
