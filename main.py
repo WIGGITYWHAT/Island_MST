@@ -56,6 +56,7 @@ def build_graph(input_file):
     for row in reader:
         name = row['NODE']
         node = nodes[name]
+        # import pdb; pdb.set_trace()
 
         neighbors = [nodes[i] for i in row.keys()
                      if i is not None and i != "NODE" and float(row[i]) >= 0]
@@ -63,6 +64,7 @@ def build_graph(input_file):
         for neighbor in neighbors:
             if neighbor != node:
                 node.set_neighbor(neighbor, float(row[neighbor.name]))
+                neighbor.set_neighbor(node, float(row[neighbor.name]))
 
     return nodes
 
@@ -94,7 +96,7 @@ def calculate_mst(nodes, start_node):
 
     print "Running Djikstra's algorithm"
     i = 0
-    print_progress(0, total_nodes)
+    print_progress(i, total_nodes)
     while(current):
         print_progress(i, total_nodes)
         # Look at all neighbors and compare distances
@@ -133,7 +135,7 @@ def write_output(outfile, distances, previous):
 def print_table(distances, previous):
     """Print out node distances and order in a nice tabular format."""
     print "{:^10} | {:^20} | {:^10}".format("Node", "Distance", "Previous")
-    print "-"*36
+    print "-"*46
     for (k, v) in distances.iteritems():
         print "{:^10} | {:>20} | {:^10}".format(k, v, previous.get(k, "-"))
 
