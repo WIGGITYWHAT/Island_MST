@@ -58,7 +58,7 @@ def build_graph(input_file):
         node = nodes[name]
 
         neighbors = [nodes[i] for i in row.keys()
-                     if i is not None and i != "NODE" and int(name) <= i and float(row[i]) >= 0]
+                     if i is not None and i != "NODE" and float(row[i]) >= 0]
 
         for neighbor in neighbors:
             if neighbor != node:
@@ -109,9 +109,9 @@ def calculate_mst(nodes, start_node):
         # iterate current to closest neighbor
         current = current.get_closest_unvisited_neighbor()
         i += 1
-    return distances, previous
     print_progress(total_nodes, total_nodes)
     print
+    return distances, previous
 
 
 def write_output(outfile, distances, previous):
