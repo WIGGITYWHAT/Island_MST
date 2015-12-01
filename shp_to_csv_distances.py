@@ -18,7 +18,7 @@ def extract_ids(input_file):
         return [shp['id'] for shp in source]
 
 
-def calculate_distances(infile, ids1, ids2, q):
+def calculate_distances(args):
     """Calculate the distances between all `ids1` to `ids2` in `infile`.
 
     infile should be a shapefile with features, ids1 and ids2 should be
@@ -29,20 +29,23 @@ def calculate_distances(infile, ids1, ids2, q):
     q is a multiprocessing q object to which the returned data is placed so
     that it may be accessed from the calling process.
     """
-    with fiona.open(infile) as source:
+    with fiona.open(args['infile']) as source:
         source = list(source)
-        # Calculate distances and store in data
-        for i, id1 in enumerate(ids1):
-            i_shp = shape(source[int(i)]['geometry'])
+        result = []
 
-            for j, id2 in enumerate(ids2):
-                j_shp = shape(source[int(j)]['geometry'])
-                if i_shp.is_valid and j_shp.is_valid:
-                    dist = i_shp.distance(j_shp)
-                else:
-                    dist = -1
+        # Calculate distances and store in result
+        i_shp = shape(source[int(args['shp_id'])]['geometry'])
+        for j in args['ids']:
+            if int(j) < int(args['shp_id']):
+                result.append(-1)
+                continue
 
-                q.put([i, j, dist])
+            j_shp = shape(source[int(j)]['geometry'])
+            if i_shp.is_valid and j_shp.is_valid:
+                result.append(i_shp.distance(j_shp))
+            else:
+                result.append(-1)
+        return result
 
 
 def main():
@@ -51,58 +54,16 @@ def main():
     infile = "./data/low_water_final/low_water.shp"
     ids = extract_ids(infile)
     # Split ids to run distance queries on multiple processes
-    c = len(ids)/2
-    set1, set2 = ids[:c], ids[c:]
+    pool = multiprocessing.Pool()
 
-    # Initialize data globals
-    data_1_1 = multiprocessing.Queue()
-    data_2_2 = multiprocessing.Queue()
-    data_1_2 = multiprocessing.Queue()
+    data = pool.map_async(calculate_distances, [{
+        'shp_id': shp_id,
+        'infile': infile,
+        'ids': ids
+    } for shp_id in ids])
 
-    # Initialize processes
-    p = []
-    p.append(multiprocessing.Process(target=calculate_distances, args=(
-        infile, set1, set1, data_1_1,)))
-    p.append(multiprocessing.Process(target=calculate_distances, args=(
-        infile, set2, set2, data_2_2,)))
-    p.append(multiprocessing.Process(target=calculate_distances, args=(
-        infile, set1, set2, data_1_2,)))
-
-    # Start all processes
-    for process in p:
-        process.start()
-
-    # Initialize empty matrix for dataset
-    data = [[-1 for j in ids] for i in ids]
-
-    num_processed = 0
-    total_to_process = len(set1)*len(set1) + len(set1)*len(set2) + \
-        len(set2)*len(set2)
-    print_progress(0, total_to_process)
-    while(num_processed < total_to_process):
-        if not data_1_1.empty():
-            d1 = data_1_1.get()
-            data[d1[0]][d1[1]] = d1[2]
-            num_processed += 1
-            print_progress(num_processed, total_to_process)
-        if not data_1_2.empty():
-            d2 = data_1_2.get()
-            data[d2[0]+c][d2[1]] = d2[2]
-            data[d2[1]][d2[0]+c] = d2[2]
-            num_processed += 1
-            print_progress(num_processed, total_to_process)
-        if not data_2_2.empty():
-            d3 = data_2_2.get()
-            data[d3[0]+c][d3[1]+c] = d3[2]
-            num_processed += 1
-            print_progress(num_processed, total_to_process)
-
-    print_progress(1, total_to_process)
-    print
-
-    # Block main execution until processes complete
-    for process in p:
-        process.join()
+    # data.wait()
+    data = data.get()
 
     outfile = open("test.csv", "w")
 
