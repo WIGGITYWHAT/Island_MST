@@ -45,6 +45,13 @@ def calculate_distances(args):
                 result.append(i_shp.distance(j_shp))
             else:
                 result.append(-1)
+
+            # Update progress bar
+            lock.acquire()
+            processed.value += 1
+            print_progress(processed.value, len(args['ids'])*len(args['ids']))
+            lock.release()
+
         return result
 
 
@@ -53,18 +60,23 @@ def main():
     # infile = "./data/random_points/test.shp"
     infile = "./data/low_water_final/low_water.shp"
     ids = extract_ids(infile)
-    # Split ids to run distance queries on multiple processes
-    pool = multiprocessing.Pool()
 
+    # Calculate each the distance from each id to ids using a process pool
+    pool = multiprocessing.Pool()
     data = pool.map_async(calculate_distances, [{
         'shp_id': shp_id,
         'infile': infile,
-        'ids': ids
+        'ids': ids,
     } for shp_id in ids])
 
-    # data.wait()
+    # Get the result of the async_map call when it is ready
     data = data.get()
 
+    # print %100 progress
+    print_progress(len(ids)*len(ids), len(ids)*len(ids))
+    print
+
+    # Write the data to a new csv file
     outfile = open("test.csv", "w")
 
     # Write header of output file
@@ -88,4 +100,6 @@ def main():
     outfile.close()
 
 if __name__ == "__main__":
+    lock = multiprocessing.Lock()
+    processed = multiprocessing.Value('i', 0)
     main()
