@@ -15,8 +15,6 @@ import csv
 from scripts.node import Node
 from scripts.args import args
 from scripts.printer import print_progress
-import fiona
-from shapely.geometry import shape
 
 
 def main():
@@ -34,40 +32,6 @@ def main():
 
     # Write result to css
     write_output(args.outfile, distances, previous)
-
-
-def build_shp_graph(input_file):
-    """Build the graph data structure from the input shp file."""
-    # Open the shapefiles
-    with fiona.open(input_file, 'r') as source:
-        source = list(source)
-        nodes = {}
-
-        # Create all nodes
-        print "Adding nodes"
-        for i, f in enumerate(source):
-            print_progress(i/float(len(source)))
-            f_id = f['id']
-            nodes[f_id] = Node(f_id)
-        print_progress(1)
-        print
-
-        # Set neighbors and distance
-        print "Building graph"
-        for i, f in enumerate(source):
-            print_progress(i/float(len(source)))
-            f_id = f['id']
-            f_node = nodes[f_id]
-            f_shape = shape(f['geometry'])
-
-            for j in source:
-                j_id = j['id']
-                if f_id != j_id:
-                    dist = f_shape.distance(shape(j['geometry']))
-                    f_node.set_neighbor(nodes[j_id], dist)
-        print_progress(1)
-        print
-        return nodes
 
 
 def build_graph(input_file):
@@ -88,12 +52,13 @@ def build_graph(input_file):
     reader.next()
 
     # Set neighbors if distance >= 0
+    print "Gathering neighbors"
     for row in reader:
         name = row['NODE']
         node = nodes[name]
 
         neighbors = [nodes[i] for i in row.keys()
-                     if i != "NODE" and float(row[i]) >= 0]
+                     if i is not None and i != "NODE" and int(name) <= i and float(row[i]) >= 0]
 
         for neighbor in neighbors:
             if neighbor != node:
@@ -112,15 +77,26 @@ def calculate_mst(nodes, start_node):
     distances = {}
     previous = {}
 
+    total_nodes = len(nodes.keys())
+
+    print "Setting initial distances"
+    print_progress(0, total_nodes)
     # Assign tentative distance values
-    for key in nodes.keys():
+    for i, key in enumerate(nodes.keys()):
+        print_progress(i, total_nodes)
         distances[key] = float('Inf')
     distances[start_node] = 0
+    print_progress(total_nodes, total_nodes)
+    print
 
     # Set current and create unvisited set
     current = nodes[start_node]
 
+    print "Running Djikstra's algorithm"
+    i = 0
+    print_progress(0, total_nodes)
     while(current):
+        print_progress(i, total_nodes)
         # Look at all neighbors and compare distances
         for neighbor in current.get_unvisited_neighbors():
             alt = distances[current.name]+current.get_distance(neighbor)
@@ -132,12 +108,15 @@ def calculate_mst(nodes, start_node):
         current.set_visited(True)
         # iterate current to closest neighbor
         current = current.get_closest_unvisited_neighbor()
-
+        i += 1
     return distances, previous
+    print_progress(total_nodes, total_nodes)
+    print
 
 
 def write_output(outfile, distances, previous):
     """Write results to output csv file."""
+    print "Writing output file"
     with open(outfile, "w") as outfile:
         fieldnames = ['node', 'dist', 'prev']
         writer = csv.DictWriter(outfile, fieldnames=fieldnames)
