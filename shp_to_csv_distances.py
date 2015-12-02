@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Create a csv matrix of distances between shapefile geometry objects.
 
 Requirements: fiona, shapely
@@ -62,7 +63,7 @@ def main():
 
     # Calculate each the distance from each id to ids using a process pool
     print "Calculating distances"
-    pool = Pool()
+    pool = Pool(maxtasksperchild=5)
     data = pool.map(calculate_distances, [(i, shapes) for i in shapes], chunksize=50)
 
     # Write the data to a new csv file
