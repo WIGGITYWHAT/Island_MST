@@ -51,8 +51,8 @@ def calculate_distances(args):
 
 def main():
     """Main execution thread."""
-    infile = "./data/random_points/test_polys.shp"
-    # infile = "./data/low_water_final/low_water.shp"
+    # infile = "./data/random_points/test_polys.shp"
+    infile = "./data/low_water_final/low_water.shp"
     ids = extract_ids(infile)
 
     # Calculate each the distance from each id to ids using a process pool
