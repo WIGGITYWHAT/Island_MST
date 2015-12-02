@@ -8,7 +8,7 @@ Date: November 25, 2015
 
 import fiona
 from shapely.geometry import shape
-import multiprocessing
+from multiprocessing import Pool
 
 
 def extract_ids(input_file):
@@ -56,7 +56,7 @@ def main():
 
     # Calculate each the distance from each id to ids using a process pool
     print "Calculating distances"
-    pool = multiprocessing.Pool()
+    pool = Pool()
     data = pool.map(calculate_distances, [{
         'shp_id': shp_id,
         'infile': infile,
