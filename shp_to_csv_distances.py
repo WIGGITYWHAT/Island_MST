@@ -18,15 +18,12 @@ def extract_ids(input_file):
 
 
 def calculate_distances(args):
-    """Calculate the distances between all `ids1` to `ids2` in `infile`.
+    """Calculate distances between `shp_id` and all other features in shapefile.
 
-    infile should be a shapefile with features, ids1 and ids2 should be
-    a list of shape ids you wish to have distances calculated for.
-    Distances between polygons that are both in ids1 will not be calculated
-    unless they are also in ids2 and vice versa. This allows the number of
-    distance queries to be limited.
-    q is a multiprocessing q object to which the returned data is placed so
-    that it may be accessed from the calling process.
+    `shp_id` is the feature id in the shapefile `infile` (global). `shp_id` and
+    each id in `ids` (global) are cast to shapely features and then passed to a
+    distance function contained in the shapely library. An array is returned
+    with all these distances.
     """
     with fiona.open(args['infile']) as source:
         source = list(source)
