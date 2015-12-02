@@ -9,7 +9,6 @@ Date: November 25, 2015
 import fiona
 from shapely.geometry import shape
 import multiprocessing
-from scripts.printer import print_progress
 
 
 def extract_ids(input_file):
@@ -56,12 +55,13 @@ def main():
     ids = extract_ids(infile)
 
     # Calculate each the distance from each id to ids using a process pool
+    print "Calculating distances"
     pool = multiprocessing.Pool()
     data = pool.map(calculate_distances, [{
         'shp_id': shp_id,
         'infile': infile,
         'ids': ids,
-    } for shp_id in ids])
+    } for shp_id in ids], chunksize=100)
 
     # Write the data to a new csv file
     outfile = open("test.csv", "w")
