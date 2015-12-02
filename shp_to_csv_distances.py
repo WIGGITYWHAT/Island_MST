@@ -47,8 +47,8 @@ def calculate_distances(shp_id):
 
 if __name__ == "__main__":
     """Main execution thread."""
-    infile = "./data/random_points/test_polys.shp"
-    # infile = "./data/low_water_final/low_water.shp"
+    # infile = "./data/random_points/test_polys.shp"
+    infile = "./data/low_water_final/low_water.shp"
     ids = extract_ids(infile)
 
     print "Calculating distances"
