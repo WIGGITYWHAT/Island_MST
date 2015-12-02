@@ -57,14 +57,11 @@ def main():
 
     # Calculate each the distance from each id to ids using a process pool
     pool = multiprocessing.Pool()
-    data = pool.map_async(calculate_distances, [{
+    data = pool.map(calculate_distances, [{
         'shp_id': shp_id,
         'infile': infile,
         'ids': ids,
     } for shp_id in ids])
-
-    # Get the result of the async_map call when it is ready
-    data = data.get()
 
     # Write the data to a new csv file
     outfile = open("test.csv", "w")
