@@ -7,10 +7,11 @@ Written by: Taylor Denouden
 Date: November 25, 2015
 """
 
+from __future__ import print_function
 import sys
 import fiona
 from shapely.geometry import shape
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
 
 
 def extract_ids(input_file):
@@ -19,7 +20,7 @@ def extract_ids(input_file):
         return [shp['id'] for shp in source]
 
 
-def calculate_distances(args):
+def calc_dists(args):
     """Calculate distances between `shp_id` and all other features in shapefile.
 
     `shp_id` is the feature id in the shapefile `infile` (global). `shp_id` and
@@ -62,29 +63,24 @@ def main():
         shapes = [(i, shape(source[int(i)]['geometry'])) for i in ids]
 
     # Calculate each the distance from each id to ids using a process pool
-    print "Calculating distances"
-    pool = Pool(maxtasksperchild=5)
-    data = pool.map(calculate_distances, [(i, shapes) for i in shapes], chunksize=50)
+    print("Calculating distances")
+    pool = Pool(processes=cpu_count(), maxtasksperchild=5)
+    data = pool.map(calc_dists, [(i, shapes) for i in shapes], chunksize=50)
 
     # Write the data to a new csv file
     outfile = open("test.csv", "w")
 
     # Write header of output file
-    print "Writing Header"
-    outfile.write("NODE")
-    for i in ids:
-        outfile.write("," + i)
+    print("Writing Header")
+    outfile.write("NODE,")
+    outfile.write(",".join(ids))
     outfile.write("\n")
 
     # Write rows
-    print "Writing Rows"
+    print("Writing Rows")
     for i in ids:
-        outfile.write(str(i) + ",")
-        i = int(i)
-
-        for j in ids:
-            j = int(j)
-            outfile.write(str(data[i][j]) + ",")
+        outfile.write(i + ",")
+        outfile.write(",".join([str(j) for j in data[int(i)]]))
         outfile.write("\n")
 
     outfile.close()
