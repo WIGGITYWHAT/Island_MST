@@ -5,7 +5,7 @@ Date: November 24, 2015
 """
 
 
-class Node:
+class Node(object):
     """Main class for Djikstra algorithm calculation."""
 
     def __init__(self, name):
@@ -41,7 +41,7 @@ class Node:
         unvisited = [k for (k, v) in self._neighbors.iteritems()
                      if not v.get_visited()]
 
-        if len(unvisited) == 0:
+        if not unvisited:
             return False
 
         unvisited_edges = {k: v for (k, v) in self._edges.iteritems()
