@@ -68,22 +68,20 @@ def main():
     data = pool.map(calc_dists, [(i, shapes) for i in shapes], chunksize=50)
 
     # Write the data to a new csv file
-    outfile = open("test.csv", "w")
+    with open("test.csv", "w") as outfile:
 
-    # Write header of output file
-    print("Writing Header")
-    outfile.write("NODE,")
-    outfile.write(",".join(ids))
-    outfile.write("\n")
-
-    # Write rows
-    print("Writing Rows")
-    for i in ids:
-        outfile.write(i + ",")
-        outfile.write(",".join([str(j) for j in data[int(i)]]))
+        # Write header of output file
+        print("Writing Header")
+        outfile.write("NODE,")
+        outfile.write(",".join(ids))
         outfile.write("\n")
 
-    outfile.close()
+        # Write rows
+        print("Writing Rows")
+        for i in ids:
+            outfile.write(i + ",")
+            outfile.write(",".join([str(j) for j in data[int(i)]]))
+            outfile.write("\n")
 
 if __name__ == "__main__":
     main()
